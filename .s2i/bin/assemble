@@ -1,0 +1,26 @@
+#!/bin/bash
+source /opt/app-root/etc/node_environment
+
+# Install Meteor
+curl -sL https://install.meteor.com | \
+      sed s/--progress-bar/-sL/g | \
+      # Install meteor into /opt/app-root
+      HOME=/opt/app-root /bin/sh
+
+# Set meteor path
+export PATH=/opt/app-root/.meteor:$PATH
+
+# Run the default builder logic
+. /usr/libexec/s2i/assemble
+
+# Build and install the meteor application
+HOME=/opt/app-root meteor build --directory /opt/app-root/src \
+             --server=http://127.0.0.1:8080 \
+             --architecture os.linux.x86_64 \
+             --server-only
+
+cd bundle/programs/server
+npm install
+
+# Fix pkg directory permissions
+fix-permissions /opt/app-root/src/bundle
